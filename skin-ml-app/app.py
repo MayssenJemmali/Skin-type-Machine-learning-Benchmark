@@ -45,6 +45,14 @@ def regression():
 def recommendation():
     return render_template('recommendation.html')
 
+@app.route('/ann')
+def ann():
+    return render_template('ann.html')
+
+@app.route('/cnn')
+def cnn_page():
+    return render_template('cnn.html')
+
 # ──── API: Classification ────
 @app.route('/api/classification/predict', methods=['POST'])
 def api_classification_predict():
@@ -99,6 +107,37 @@ def api_recommendation_get():
         data = request.get_json()
         user_input = data.get('input', {})
         result = get_recommendations(user_input)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ──── API: ANN ────
+@app.route('/api/ann/predict', methods=['POST'])
+def api_ann_predict():
+    from models.ann import predict_ann, encode_input
+    try:
+        data = request.get_json()
+        params = data.get('params', {})
+        user_input = data.get('input', {})
+        encoded = encode_input(user_input)
+        result = predict_ann(encoded, params)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ──── API: CNN (image upload) ────
+@app.route('/api/cnn/predict', methods=['POST'])
+def api_cnn_predict():
+    from models.cnn import predict_cnn
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file uploaded'}), 400
+        file_bytes = request.files['image'].read()
+        params = {
+            'h1': request.form.get('h1', 128),
+            'h2': request.form.get('h2', 64),
+        }
+        result = predict_cnn(file_bytes, params)
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

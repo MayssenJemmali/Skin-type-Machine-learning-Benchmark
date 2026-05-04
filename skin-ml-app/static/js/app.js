@@ -99,10 +99,11 @@ async function predictClustering() {
 
     try {
         const res = await apiCall('/api/clustering/predict', { algorithm: algo, input });
-        
+
         document.getElementById('clu-results-container').style.display = 'block';
         document.getElementById('clu-res-name').textContent = res.cluster_name;
-        
+        document.getElementById('clu-res-match').textContent = `via ${res.algorithm}`;
+
         const details = document.getElementById('clu-group-details');
         if (res.profile) {
             details.innerHTML = `
@@ -116,13 +117,27 @@ async function predictClustering() {
         } else {
             details.innerHTML = `<p>Your profile is very unique compared to the rest of the dataset and was flagged as an outlier (Noise) by the DBSCAN algorithm.</p>`;
         }
+
+        // ── Render the cluster scatter plot ──────────────────────────────
+        if (res.plot) {
+            const plotCard = document.getElementById('clu-plot-card');
+            const plotImg  = document.getElementById('clu-plot-img');
+            plotImg.src = res.plot;
+            plotCard.style.display = 'block';
+            // Re-trigger fade-in animation
+            plotCard.style.animation = 'none';
+            plotCard.offsetHeight; // reflow
+            plotCard.style.animation = '';
+        }
     } catch (e) {
         alert('Error: ' + e.message);
         document.getElementById('clu-placeholder').style.display = 'flex';
+        document.getElementById('clu-plot-card').style.display = 'none';
     } finally {
         hideSpinner('clu-spinner');
     }
 }
+
 
 /* ── Recommendation ── */
 async function getRecommendation() {
@@ -152,5 +167,53 @@ async function getRecommendation() {
         alert('Error: ' + e.message);
     } finally {
         hideSpinner('rec-spinner');
+    }
+}
+
+/* ── ANN ── */
+async function predictANN() {
+    const input  = getBaseFeatures();
+    const params = {
+        h1:            document.getElementById('ann-h1')?.value || 100,
+        h2:            document.getElementById('ann-h2')?.value || 50,
+        learning_rate: document.getElementById('ann-lr')?.value || 0.001,
+    };
+
+    showSpinner('ann-spinner');
+    document.getElementById('ann-placeholder').style.display = 'none';
+    document.getElementById('ann-results').style.display     = 'none';
+
+    try {
+        const res = await apiCall('/api/ann/predict', { input, params });
+
+        document.getElementById('ann-results').style.display = 'block';
+        document.getElementById('ann-pred').textContent      = res.skin_type;
+        document.getElementById('ann-meta').textContent      =
+            `Val accuracy: ${res.val_accuracy ?? '—'}% · ${res.n_iter} epochs · layers: [${res.hidden_layers.join(', ')}]`;
+
+        // Probability bars
+        const probaEl = document.getElementById('ann-proba');
+        probaEl.innerHTML = '';
+        if (res.probabilities) {
+            Object.entries(res.probabilities)
+                  .sort((a, b) => b[1] - a[1])
+                  .forEach(([cls, val]) => {
+                probaEl.innerHTML += `
+                    <div class="proba-row">
+                        <div class="proba-info"><span>${cls}</span><span>${val}%</span></div>
+                        <div class="proba-track"><div class="proba-bar" style="width:${val}%"></div></div>
+                    </div>`;
+            });
+        }
+
+        // Plots
+        if (res.plot_network)    document.getElementById('ann-plot-network').src    = res.plot_network;
+        if (res.plot_importance) document.getElementById('ann-plot-importance').src = res.plot_importance;
+
+    } catch (e) {
+        alert('Error: ' + e.message);
+        document.getElementById('ann-placeholder').style.display = 'flex';
+    } finally {
+        hideSpinner('ann-spinner');
     }
 }

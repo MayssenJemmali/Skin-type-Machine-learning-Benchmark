@@ -66,6 +66,29 @@ Meilleur compromis accuracy / F1 / vitesse d'inférence / interprétabilité.
 
 ---
 
+## 🖼️ Image Dataset
+
+This project uses a dataset of ~14,000 skin images for the CNN module. Due to its size, the images are not included in this repository.
+
+### 📥 Download Instructions
+1. Go to [Roboflow Universe](https://universe.roboflow.com/) and search for the skin type dataset or use the link provided in your documentation.
+2. Download the dataset in **folder format**.
+3. Unzip the contents into the project root directory.
+4. Ensure the folder is named exactly: `skin type image dataset`.
+
+The structure should look like this:
+```
+/Skin-type-Machine-learning-Benchmark
+  /skin type image dataset
+    /train
+    /valid
+    /test
+  /skin-ml-app
+  ...
+```
+
+---
+
 ## ⚙️ Prérequis
 
 ```bash
