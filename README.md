@@ -66,26 +66,26 @@ Meilleur compromis accuracy / F1 / vitesse d'inférence / interprétabilité.
 
 ---
 
-## 🖼️ Image Dataset
+## 🖼️ CNN Image Classification (Deep Learning)
 
-This project uses a dataset of ~14,000 skin images for the CNN module. Due to its size, the images are not included in this repository.
+L'application intègre également un module de vision par ordinateur pour classer les types de peau directement à partir de photos.
 
-### 📥 Download Instructions
-1. Go to [Roboflow Universe](https://universe.roboflow.com/) and search for the skin type dataset or use the link provided in your documentation.
-2. Download the dataset in **folder format**.
-3. Unzip the contents into the project root directory.
-4. Ensure the folder is named exactly: `skin type image dataset`.
+**Architecture :**
+Nous utilisons l'architecture **MobileNetV2** (Google), optimisée via **Transfer Learning (Feature Extraction)**. Le cerveau de base du modèle a été gelé, et nous avons entraîné une nouvelle couche de classification spécialisée sur notre propre dataset de **14 839 images**.
 
-The structure should look like this:
-```
-/Skin-type-Machine-learning-Benchmark
-  /skin type image dataset
-    /train
-    /valid
-    /test
-  /skin-ml-app
-  ...
-```
+**Performances & Accélération :**
+Le modèle atteint **90.4% d'Accuracy en validation**. Le pipeline est passé à une architecture **Inference-Only**. L'entraînement a été optimisé avec **TensorFlow** couplé au plugin **DirectML**, permettant à l'application d'exploiter la puissance des cartes graphiques Windows locales au lieu de saturer le CPU.
+
+### 🚀 Utilisation 
+
+Excellente nouvelle : le modèle compilé (`skin_type_cnn.keras`) ne pesant que **28 MB**, il est inclus directement dans ce repository ! 
+
+**Si vous tirez (pull) ce projet, l'application fonctionnera instantanément :**
+1. Assurez-vous d'avoir installé les bons packages : `pip install -r skin-ml-app/requirements.txt`
+2. Lancez l'application Flask : `python skin-ml-app/app.py`
+3. La page CNN est prête à l'emploi avec le modèle de 90.4% de précision !
+
+*(Note : le dataset d'images brut de 14 000 photos n'est pas inclus pour ne pas saturer le dépôt. Si vous souhaitez ré-entraîner le modèle avec `train_cnn.py`, il vous faudra d'abord télécharger les dossiers d'images localement).*
 
 ---
 

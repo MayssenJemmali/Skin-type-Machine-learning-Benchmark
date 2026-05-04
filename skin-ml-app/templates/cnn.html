@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-header animate-in">
     <h1>📸 CNN Vision Classifier</h1>
-    <p>Upload a skin photo and let the neural network analyse it. Includes a pixel-sensitivity heatmap showing <em>where</em> the model looked.</p>
+    <p>Upload a skin photo and let the neural network analyse it using a pre-trained MobileNetV2 architecture.</p>
 </div>
 
 <div class="grid-sidebar">
@@ -11,18 +11,14 @@
     <div class="animate-in" style="animation-delay:0.1s;">
         <div class="card">
             <div class="card-header">
-                <div class="card-title">⚙️ Model Config</div>
+                <div class="card-title">🤖 Pre-trained Model</div>
             </div>
-            <div class="form-group">
-                <label>Hidden Layer 1 — neurons</label>
-                <input type="number" id="cnn-h1" class="form-control" value="128" min="32" max="512">
-            </div>
-            <div class="form-group">
-                <label>Hidden Layer 2 — neurons</label>
-                <input type="number" id="cnn-h2" class="form-control" value="64" min="16" max="256">
+            <div style="padding:0 0 16px 0;font-size:13px;color:var(--text-secondary);line-height:1.6;">
+                <p style="margin-bottom:8px;">This <strong>MobileNetV2</strong> Convolutional Neural Network was pre-trained offline on a combined dataset of <strong>14,839</strong> skin photos, achieving a validation accuracy of <strong style="color:#00d4aa;">90.4%</strong>.</p>
+                <p style="margin-bottom:0;">The pipeline was upgraded to an <strong>inference-only</strong> architecture using <strong>TensorFlow</strong>. It leverages the <strong>DirectML</strong> plugin to route computations directly through your local GPU, providing instant results without the heavy bottleneck of real-time retraining.</p>
             </div>
 
-            <div class="card-header" style="margin-top:8px;">
+            <div class="card-header" style="border-top:1px solid var(--border-glass);padding-top:16px;">
                 <div class="card-title">🖼️ Upload Skin Image</div>
             </div>
 
@@ -44,11 +40,12 @@
             </div>
 
             <!-- Preview -->
-            <div id="cnn-preview-wrap" style="display:none;margin-top:16px;text-align:center;">
+            <div id="cnn-preview-wrap" style="display:none;position:relative;text-align:center;background:rgba(0,0,0,0.1);padding:16px;border-radius:16px;border:1px solid var(--border-glass);">
+                <button onclick="clearFile()" style="position:absolute;top:-10px;right:-10px;background:#ff6b6b;color:white;border:none;border-radius:50%;width:30px;height:30px;font-weight:bold;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:14px;z-index:10;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">✕</button>
                 <img id="cnn-preview-img" src=""
-                     style="max-width:100%;border-radius:12px;border:1px solid var(--border-glass);">
+                     style="max-width:100%;max-height:280px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
                 <p id="cnn-preview-name"
-                   style="font-size:12px;color:var(--text-muted);margin-top:8px;"></p>
+                   style="font-size:12px;color:var(--text-muted);margin-top:12px;margin-bottom:0;word-break:break-all;"></p>
             </div>
 
             <button id="cnn-run-btn" class="btn btn-primary"
@@ -57,13 +54,7 @@
                 <span>🔬 Analyse Image</span>
             </button>
 
-            <div style="margin-top:16px;padding:12px;background:rgba(255,211,61,.05);
-                        border:1px solid rgba(255,211,61,.15);border-radius:12px;font-size:12px;
-                        color:var(--accent-warn);line-height:1.6;">
-                ⏱️ <strong>First run takes ~30–60 s</strong> — the model trains on
-                ~1 600 real skin photos from your dataset. Subsequent predictions
-                are instant (model is cached).
-            </div>
+
         </div>
     </div>
 
@@ -78,7 +69,7 @@
             <div>
                 <div style="font-size:56px;margin-bottom:20px;">📸</div>
                 <h3 style="color:white;margin-bottom:12px;">Awaiting Image</h3>
-                <p>Upload a skin photo and click Analyse to see the prediction and heatmap.</p>
+                <p>Upload a skin photo and click Analyse to see the predictions.</p>
             </div>
         </div>
 
@@ -106,26 +97,28 @@
                 </div>
             </div>
 
-            <!-- Sensitivity heatmap -->
-            <div class="card" style="margin-top:24px;">
-                <div class="card-header">
-                    <div class="card-title">🔥 Pixel Sensitivity Heatmap</div>
-                    <span style="font-size:12px;color:var(--text-muted);">brighter = more influential pixels</span>
+            <!-- Charts Row -->
+            <div style="display:flex;gap:20px;margin-top:24px;align-items:stretch;">
+                <!-- Donut chart -->
+                <div class="card" style="flex:1;min-width:0;margin:0;">
+                    <div class="card-header">
+                        <div class="card-title">🍩 Probability Distribution</div>
+                    </div>
+                    <div class="plot-container" style="border-radius:12px;overflow:hidden;margin-top:0;">
+                        <img id="cnn-plot-donut" src="" alt="Probability Donut Chart"
+                             style="width:100%;display:block;">
+                    </div>
                 </div>
-                <div class="plot-container" style="border-radius:12px;overflow:hidden;margin-top:0;">
-                    <img id="cnn-plot-sens" src="" alt="Sensitivity heatmap"
-                         style="width:100%;display:block;">
-                </div>
-            </div>
 
-            <!-- Radar chart -->
-            <div class="card" style="margin-top:24px;">
-                <div class="card-header">
-                    <div class="card-title">🕸️ Probability Radar Chart</div>
-                </div>
-                <div class="plot-container" style="border-radius:12px;overflow:hidden;margin-top:0;">
-                    <img id="cnn-plot-radar" src="" alt="Radar chart"
-                         style="width:100%;display:block;">
+                <!-- Radar chart -->
+                <div class="card" style="flex:1;min-width:0;margin:0;">
+                    <div class="card-header">
+                        <div class="card-title">🕸️ Probability Radar Chart</div>
+                    </div>
+                    <div class="plot-container" style="border-radius:12px;overflow:hidden;margin-top:0;">
+                        <img id="cnn-plot-radar" src="" alt="Radar chart"
+                             style="width:100%;display:block;">
+                    </div>
                 </div>
             </div>
 
@@ -146,6 +139,7 @@ function handleFileSelect(file) {
         document.getElementById('cnn-preview-img').src = e.target.result;
         document.getElementById('cnn-preview-name').textContent = file.name;
         document.getElementById('cnn-preview-wrap').style.display = 'block';
+        document.getElementById('cnn-dropzone').style.display = 'none'; // Hide dropzone
         const btn = document.getElementById('cnn-run-btn');
         btn.disabled = false;
         btn.style.opacity = '1';
@@ -162,6 +156,24 @@ function handleDrop(event) {
     if (file && file.type.startsWith('image/')) handleFileSelect(file);
 }
 
+function clearFile() {
+    _selectedFile = null;
+    document.getElementById('cnn-file-input').value = '';
+    
+    // Switch views back
+    document.getElementById('cnn-preview-wrap').style.display = 'none';
+    document.getElementById('cnn-dropzone').style.display = 'block';
+    
+    // Disable run button
+    const btn = document.getElementById('cnn-run-btn');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    
+    // Reset UI to placeholder
+    document.getElementById('cnn-results').style.display = 'none';
+    document.getElementById('cnn-placeholder').style.display = 'flex';
+}
+
 async function predictCNN() {
     if (!_selectedFile) return;
 
@@ -171,8 +183,6 @@ async function predictCNN() {
 
     const fd = new FormData();
     fd.append('image', _selectedFile);
-    fd.append('h1', document.getElementById('cnn-h1').value);
-    fd.append('h2', document.getElementById('cnn-h2').value);
 
     try {
         const resp = await fetch('/api/cnn/predict', { method: 'POST', body: fd });
@@ -184,7 +194,7 @@ async function predictCNN() {
         document.getElementById('cnn-pred').textContent      = res.skin_type.charAt(0).toUpperCase() + res.skin_type.slice(1);
         document.getElementById('cnn-conf').textContent      = `Confidence: ${res.confidence}%`;
         document.getElementById('cnn-meta').textContent      =
-            `Train acc: ${res.train_acc}% · ${res.n_iter} epochs`;
+            `Val Acc: ${res.train_acc}% · Trained on ${res.n_iter} samples`;
 
         // Probability bars
         const probaEl = document.getElementById('cnn-proba');
@@ -199,8 +209,8 @@ async function predictCNN() {
                 </div>`;
         });
 
-        if (res.plot_sensitivity) document.getElementById('cnn-plot-sens').src  = res.plot_sensitivity;
-        if (res.plot_radar)       document.getElementById('cnn-plot-radar').src  = res.plot_radar;
+        if (res.plot_donut) document.getElementById('cnn-plot-donut').src  = res.plot_donut;
+        if (res.plot_radar) document.getElementById('cnn-plot-radar').src  = res.plot_radar;
 
     } catch (e) {
         alert('Error: ' + e.message);
