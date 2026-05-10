@@ -6,7 +6,7 @@ What it does:
   2. Merges them and de-duplicates by file hash to avoid overlap
   3. Trains a MobileNetV2-based CNN (Transfer Learning)
   4. Saves the trained model to:
-       skin-ml-app/models/saved_cnn/skin_type_cnn.keras
+       skin-ml-app/models/saved_cnn/skin_type_cnn.h5
 
 After running this script once, the Flask app will load the saved
 model instantly on every startup -- no re-training needed.
@@ -66,7 +66,7 @@ DATASET_DIRS = [
 # Where the trained model will be saved (inside the Flask app)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SAVE_DIR   = os.path.join(SCRIPT_DIR, "models", "saved_cnn")
-MODEL_PATH = os.path.join(SAVE_DIR, "skin_type_cnn.keras")
+MODEL_PATH = os.path.join(SAVE_DIR, "skin_type_cnn.h5")
 
 random.seed(SEED)
 np.random.seed(SEED)

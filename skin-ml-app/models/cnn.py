@@ -5,7 +5,7 @@ This module loads the pre-trained TensorFlow CNN model from disk and runs
 inference.  No training happens at runtime — the model was trained once by
 running  skin-ml-app/train_cnn.py  and saved to:
 
-    skin-ml-app/models/saved_cnn/skin_type_cnn.keras
+    skin-ml-app/models/saved_cnn/skin_type_cnn.h5
 
 If the saved model does not exist yet, this module raises a clear error
 telling you to run the training script first.
@@ -25,7 +25,7 @@ from PIL import Image
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 SAVE_DIR   = os.path.join(BASE_DIR, "saved_cnn")
-MODEL_PATH = os.path.join(SAVE_DIR, "skin_type_cnn.keras")
+MODEL_PATH = os.path.join(SAVE_DIR, "skin_type_cnn.h5")
 META_PATH  = os.path.join(SAVE_DIR, "meta.json")
 
 # ── Load metadata (classes, img_size, …) ─────────────────────────────────────
@@ -66,6 +66,7 @@ def _get_model():
         )
 
     print("[CNN] Loading TensorFlow model … ", end="", flush=True)
+    os.environ["TF_USE_LEGACY_KERAS"] = "1"
     import tensorflow as tf
     _TF_MODEL = tf.keras.models.load_model(MODEL_PATH)
     val_acc = _META.get("val_acc", "?") if _META else "?"
